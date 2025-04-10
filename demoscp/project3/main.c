@@ -6,8 +6,8 @@
 #define LEDS (LED_RED | LED_GREEN)
 
 #define SW1 BIT3		/* switch1 is p1.3 */
-#define SW2 BIT1
-#define SWITCHES SW1 | SW2		/* only 1 switch on this board */
+#define SW2 BIT4
+#define SWITCHES SW1		/* only 1 switch on this board */
 
 void switch_init() {
   P1REN |= SWITCHES;		/* enables resistors for switches */
@@ -26,11 +26,34 @@ void wdt_init() {
   enableWDTInterrupts();	/* enable periodic interrupt */
 }
 
+void buzzer_init() {
+
+  timerAUpmode();
+
+  P2SEL2 &= ~(BIT6 | BIT7);
+
+  P2SEL &= ~BIT7;
+
+  P2SEL |= BIT6;
+
+  P2DIR = BIT6;
+
+}
+
+void buzzer_set_period(short cycles) {
+
+  CCR0 = cycles;
+
+  CCR1 = cycles >> 1;
+
+}
+
 void main(void) 
 {  
   switch_init();
   led_init();
   wdt_init();
+  buzzer_init();
     
   or_sr(0x18);  // CPU off, GIE on
 } 
@@ -46,12 +69,14 @@ switch_interrupt_handler()
   P1IES |= (p1val & SWITCHES);	/* if switch up, sense down */
   P1IES &= (p1val | ~SWITCHES);	/* if switch down, sense up */
 
-  if (p1val & SW2) {		/* button up */
-    /*P1OUT &= ~LED_GREEN;
-      buttonDown = 0; */
-  } else {			/* button down */
-    /*P1OUT |= LED_RED;
-      buttonDown = 1; */
+  if (p1val & SW1) {		/* button up */
+    buzzer_set_period(1000);
+    buttonDown = 0;
+  }
+
+  else {			/* button down */
+    buzzer_set_period(0);
+    buttonDown = 1;
   }
 }
 

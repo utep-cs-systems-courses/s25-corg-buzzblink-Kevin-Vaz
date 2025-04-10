@@ -6,8 +6,8 @@
 #define LEDS (LED_RED | LED_GREEN)
 
 #define SW1 BIT3		/* switch1 is p1.3 */
-#define SW2 BIT1
-#define SWITCHES SW1 | SW2		/* only 1 switch on this board */
+#define SW2 BIT4
+#define SWITCHES SW1		/* only 1 switch on this board */
 
 void switch_init() {
   P1REN |= SWITCHES;		/* enables resistors for switches */
@@ -46,12 +46,18 @@ switch_interrupt_handler()
   P1IES |= (p1val & SWITCHES);	/* if switch up, sense down */
   P1IES &= (p1val | ~SWITCHES);	/* if switch down, sense up */
 
-  if (p1val & SW2) {		/* button up */
-    /*P1OUT &= ~LED_GREEN;
-      buttonDown = 0; */
-  } else {			/* button down */
-    /*P1OUT |= LED_RED;
-      buttonDown = 1; */
+  if (p1val & SW1) {		/* button up */
+    P1OUT &= ~LED_GREEN;
+    buttonDown = 0;
+  }
+  else if(p1val & SW2) {
+    P1OUT &= ~LED_GREEN;
+    buttonDown = 0;
+  }
+
+  else {			/* button down */
+    P1OUT |= LED_GREEN;
+    buttonDown = 1;
   }
 }
 

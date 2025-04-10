@@ -1,0 +1,20 @@
+#include <msp430.h>
+#include "timerLib/libTimer.h"
+#include "buzzer.h"
+
+//sets the pins of the buzzer
+void buzzer_unit(){
+  timerAUPmode();
+
+  //Configure P2.6 as the output of the buzzer
+  P2SEL2 &= ~(BIT6 | BIT7);
+  P2SEL &= ~BIT7;
+  P2SEL |= BIT6;
+  P2DIR = BIT6;
+}
+
+//set frequency of the buzzer
+void buzzer_set_period(shot cycle){
+  CCR0 = cycle;
+  CCR1 = cycle >> 1;
+}

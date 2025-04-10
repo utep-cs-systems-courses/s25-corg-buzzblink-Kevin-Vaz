@@ -1,0 +1,109 @@
+#include <msp430.h>
+
+#include "libTimer.h"
+
+
+
+#define LED_RED BIT0               // P1.0
+
+#define LED_GREEN BIT6             // P1.6
+
+#define LEDS (BIT0 | BIT6)
+
+
+
+#define SW1 BIT3        /* switch1 is p1.3 */
+
+#define SW2 BIT4        /* switch2 is p1.4 */
+
+#define SW3 BIT5        /* switch3 is p1.5 */
+
+#define SW4 BIT6        /* switch4 is p1.6 */
+
+#define SWITCHES (SW1 | SW2 | SW3 | SW4)  /* all switches */
+
+
+
+void main(void)
+
+{
+
+  configureClocks();  // Setup clocks for low power
+
+
+
+  P1DIR |= LEDS;          // Set LED pins as output
+
+  P1OUT &= ~LEDS;         // LEDs initially off
+
+
+
+  P1REN |= SWITCHES;      // Enable resistors for switches
+
+  P1IE |= SWITCHES;       // Enable interrupts for all switches
+
+  P1OUT |= SWITCHES;      // Pull-ups for switches
+
+  P1DIR &= ~SWITCHES;     // Set switch pins as input
+
+
+
+  // Set edge select for all switches (falling edge for all)
+
+  P1IES |= SWITCHES;      // Interrupt on falling edge (button press)
+
+  P1IFG &= ~SWITCHES;     // Clear any pending interrupt flag
+  or_sr(0x18);  // CPU off, GIE on (enter low power mode with interrupts enabled)
+
+}
+
+
+
+void switch_interrupt_handler()
+
+{
+
+  char p1val = P1IN;  // Read current switch states
+
+
+
+  // Check each switch and turn on the red LED if pressed
+
+  if ((p1val & SW1) == 0 || (p1val & SW2) == 0 || (p1val & SW3) == 0 || (p1val & SW4) == 0) {
+
+    P1OUT |= LED_RED;       // Turn on red LED
+
+    P1OUT &= ~LED_GREEN;    // Turn off green LED
+
+  } else {
+
+    P1OUT |= LED_GREEN;     // Turn on green LED
+
+    P1OUT &= ~LED_RED;      // Turn off red LED
+
+  }
+
+}
+
+
+
+// Interrupt service routine for PORT1 (switches)
+
+void __interrupt_vec(PORT1_VECTOR) Port_1(){
+
+  if (P1IFG & SW1) {      /* Check if SW1 caused the interrupt */
+
+    P1IFG &= ~SW1;        /* Clear interrupt flag for SW1 */
+
+    switch_interrupt_handler();  /* Handle the switch press */
+
+  }
+
+  if (P1IFG & SW2) {      /* Check if SW2 caused the interrupt */
+
+    P1IFG &= ~SW2;        /* Clear interrupt flag for SW2 */
+
+    switch_interrupt_handler();
+
+  }
+}

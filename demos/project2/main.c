@@ -3,39 +3,26 @@
 
 #define LED_RED BIT0               // P1.0
 #define LED_GREEN BIT6             // P1.6
-#define LEDS (LED_RED | LED_GREEN)
+#define LEDS (BIT0 | BIT6)
 
-#define SW1 BIT3		/* switch1 is p1.3 */
+#define SW1 BIT1		/* switch1 is p1.3 */
 #define SW2 BIT1
-#define SWITCHES SW1 | SW2		/* only 1 switch on this board */
+#define SWITCHES 10		/* only 1 switch on this board */
 
-void switch_init() {
+void main(void) 
+{  
+  configureClocks();
+
+  P1DIR |= LEDS;
+  P1OUT &= ~LEDS;		/* leds initially off */
+  
   P1REN |= SWITCHES;		/* enables resistors for switches */
   P1IE |= SWITCHES;		/* enable interrupts from switches */
   P1OUT |= SWITCHES;		/* pull-ups for switches */
   P1DIR &= ~SWITCHES;		/* set switches' bits for input */
-}
 
-void led_init() {
-  P1DIR |= LEDS;
-  P1OUT &= ~LEDS;		/* leds initially off */
-}
-
-void wdt_init() {
-  configureClocks();		/* setup master oscillator, CPU & peripheral clocks */
-  enableWDTInterrupts();	/* enable periodic interrupt */
-}
-
-void main(void) 
-{  
-  switch_init();
-  led_init();
-  wdt_init();
-    
   or_sr(0x18);  // CPU off, GIE on
 } 
-
-static int buttonDown;
 
 void
 switch_interrupt_handler()
@@ -46,12 +33,14 @@ switch_interrupt_handler()
   P1IES |= (p1val & SWITCHES);	/* if switch up, sense down */
   P1IES &= (p1val | ~SWITCHES);	/* if switch down, sense up */
 
-  if (p1val & SW2) {		/* button up */
-    /*P1OUT &= ~LED_GREEN;
-      buttonDown = 0; */
-  } else {			/* button down */
-    /*P1OUT |= LED_RED;
-      buttonDown = 1; */
+/* up=red, down=green */
+  if (p1val & SW1) {
+    P1OUT |= LED_RED;
+    P1OUT &= ~LED_GREEN;
+  }
+  if(p1val & SW2) {
+    P1OUT |= LED_RED;
+    P1OUT &= ~LED_GREEN;
   }
 }
 
@@ -64,18 +53,3 @@ __interrupt_vec(PORT1_VECTOR) Port_1(){
     switch_interrupt_handler();	/* single handler for all switches */
   }
 }
-
-void
-__interrupt_vec(WDT_VECTOR) WDT()	/* 250 interrupts/sec */
-{
-  static int blink_count = 0;
-  switch (blink_count) { 
-  case 6: 
-    blink_count = 0;
-    P1OUT |= LED_RED;
-    break;
-  default:
-    blink_count ++;
-    if (!buttonDown) P1OUT &= ~LED_RED; /* don't blink off if button is down */
-  }
-} 
