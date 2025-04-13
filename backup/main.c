@@ -10,7 +10,7 @@ int main(void) {
 
   switch_init();
   led_init();
-  buzzer_unit();
+  buzzer_init();
   configureClocks();
   enableWDTInterrupts();
   or_sr(0x18);

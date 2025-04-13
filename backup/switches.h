@@ -1,14 +1,14 @@
 #ifndef switches_include
 #define switches_include
 
-#define S0 BIT0 //button s1
-#define S1 BIT1 //s2
-#define S2 BIT2 //s3
-#define SW3 BIT3 //s4
+#define SW1 BIT0 //button s1
+#define SW2 BIT1 //s2
+#define SW3 BIT2 //s3
+#define SW4 BIT3 //s4
 
 
 
-#define SWITCHES (sw0|sw1|sw2|sw3)
+#define SWITCHES (sw1|sw2|sw3|sw4)
 
 unsigned char selector;
 

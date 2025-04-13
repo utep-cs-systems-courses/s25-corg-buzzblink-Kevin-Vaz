@@ -4,8 +4,8 @@
 
 
 //configure the pins 
-void buzzer_unit(){
-  timerAUPmode();
+void buzzer_init(){
+  timerAUpmode();
 
   P2SEL2 &= ~(BIT6 | BIT7);
   P2SEL &= ~BIT7;
